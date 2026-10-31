@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>College-Chalo | Live Campus Ride Sharing</title>
+    
+    <!-- Leaflet Interactive Maps CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- App Stylesheet -->
+    <link rel="stylesheet" href="/static/css/main.css?v=2.5">
+    <link rel="icon" type="image/jpeg" href="/static/img/logo.jpg">
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body class="map-view-active">
+
+    <!-- ====================================================================== -->
+    <!-- COLLEGE-CHALO MODERN BEIGE SPLASH SCREEN (5.0s OPENING SEQUENCE)       -->
+    <!-- ====================================================================== -->
+    <div id="splashScreen" class="splash-screen" aria-label="College-Chalo Launching">
+        <div class="splash-content">
+            <div class="splash-logo-container">
+                <div class="splash-logo-glow"></div>
+                <img src="/static/img/logo.jpg" alt="College-Chalo Logo" class="splash-logo-img">
+            </div>
+            <div class="splash-brand-text">
+                <h1 class="splash-brand-title">COLLEGE-CHALO</h1>
+                <p class="splash-tagline">Share Your Journey, Connect With Your Community.</p>
+            </div>
+            <div class="splash-progress-track">
+                <div class="splash-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- SLIDE-OUT MOBILITY MENU DRAWER                                          -->
+    <!-- Relocates all header navigation & controls cleanly off the map          -->
+    <!-- ====================================================================== -->
+    <div class="mobility-drawer-backdrop" id="mobilityDrawerBackdrop" onclick="app.closeMobilityDrawer()"></div>
+    <aside class="mobility-drawer" id="mobilityDrawer" aria-label="Navigation Menu">
+        <div class="drawer-header">
+            <div class="drawer-user-info" onclick="document.getElementById('profileModal').classList.add('active'); app.closeMobilityDrawer();">
+                <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="user-avatar-display drawer-avatar">
+                <div class="drawer-user-meta">
+                    <h3 class="user-name-display drawer-user-name">Rohan Sharma</h3>
+                    <span class="role-badge student user-role-badge-display">Student</span>
+                </div>
+            </div>
+            <button type="button" class="drawer-close-btn" onclick="app.closeMobilityDrawer()" aria-label="Close Menu">&times;</button>
+        </div>
+
+        <div class="drawer-body">
+            <!-- Active Community Role Switcher -->
+            <div class="drawer-section">
+                <span class="drawer-section-title">Your College Community</span>
+                <div class="drawer-role-grid">
+                    <button type="button" class="drawer-role-card active" data-role="student" onclick="app.switchDemoAccount('student'); app.closeMobilityDrawer();">
+                        <span class="role-emoji">🎓</span>
+                        <span class="role-name">Student</span>
+                    </button>
+                    <button type="button" class="drawer-role-card" data-role="faculty" onclick="app.switchDemoAccount('faculty'); app.closeMobilityDrawer();">
+                        <span class="role-emoji">👨‍🏫</span>
+                        <span class="role-name">Faculty</span>
+                    </button>
+                    <button type="button" class="drawer-role-card" data-role="staff" onclick="app.switchDemoAccount('staff'); app.closeMobilityDrawer();">
+                        <span class="role-emoji">🏢</span>
+                        <span class="role-name">Staff</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Action Links -->
+            <div class="drawer-menu-list">
+                <button type="button" class="drawer-menu-item" onclick="app.openOfferRideModal(); app.closeMobilityDrawer();">
+                    <div class="drawer-icon-box">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    </div>
+                    <span>Offer a Ride</span>
+                </button>
+
+                <button type="button" class="drawer-menu-item" onclick="app.openMyBookingsModal(); app.closeMobilityDrawer();">
+                    <div class="drawer-icon-box">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <span>My Bookings</span>
+                </button>
+
+                <button type="button" class="drawer-menu-item" onclick="document.getElementById('profileModal').classList.add('active'); app.closeMobilityDrawer();">
+                    <div class="drawer-icon-box">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <span>View Profile</span>
+                </button>
+
+                <button type="button" class="drawer-menu-item" onclick="app.showView('joinCommunityView'); app.closeMobilityDrawer();">
+                    <div class="drawer-icon-box">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    </div>
+                    <span>Join / Register Account</span>
+                </button>
+
+                <button type="button" class="drawer-menu-item" onclick="app.showView('testSuiteView'); app.closeMobilityDrawer();">
+                    <div class="drawer-icon-box">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                    <span>Security & RBAC Tests (12/12)</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="drawer-footer">
+            <button type="button" class="drawer-signout-btn" onclick="app.signOut(); app.closeMobilityDrawer();">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ====================================================================== -->
+    <!-- MAIN APPLICATION CONTAINER                                             -->
+    <!-- ====================================================================== -->
+    <main class="app-container">
+
+        <!-- ================================================================== -->
+        <!-- SCREEN 0: FULLSCREEN LIVE MAP HOMEPAGE (RAPIDO / UBER EXPERIENCE)  -->
+        <!-- ================================================================== -->
+        <section id="mapHomeView" class="view-section active map-home-section">
+
+            <!-- Interactive Map Layer (Google Maps) -->
+            <div id="liveMap" class="live-map" tabindex="0"></div>
+
+            <!-- Google Maps Official Brand Watermark -->
+            <div class="google-maps-watermark" title="Google Maps">
+                <img src="https://maps.gstatic.com/mapfiles/api-3/images/google4.png" alt="Google">
+            </div>
+
+            <!-- Loading Indicator while Geolocation & Map initializes -->
+            <div id="mapLoader" class="map-loader">
+                <div class="loader-spinner"></div>
+                <span class="loader-text" id="mapLoaderText">Detecting campus location...</span>
+            </div>
+
+            <!-- Floating Top Controls Bar (Header replacement) -->
+            <div class="floating-top-bar">
+                <!-- Brand Pill -->
+                <div class="floating-brand-pill" onclick="app.toggleMobilityDrawer()" title="Open College Menu">
+                    <img src="/static/img/logo.jpg" alt="Logo" class="floating-logo">
+                    <div class="floating-brand-info">
+                        <span class="floating-brand-title">College-Chalo</span>
+                        <span class="floating-role-tag student user-role-badge-display" id="mapRoleBadge">Student</span>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="floating-top-actions">
+                    <button type="button" class="floating-action-btn offer-btn" onclick="app.openOfferRideModal()" title="Offer a Ride">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        <span>Offer Ride</span>
+                    </button>
+
+                    <button type="button" class="floating-action-btn menu-btn" id="menuDrawerTrigger" onclick="app.toggleMobilityDrawer()" title="Menu & Profile">
+                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="user-avatar-display floating-avatar-img">
+                        <svg class="hamburger-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Floating Map Controls (Right Side) -->
+            <div class="floating-map-controls">
+                <button type="button" class="map-control-btn layer-btn" id="mapLayerToggleBtn" onclick="app.toggleGoogleMapLayer()" title="Switch Google Maps Style (Streets / Satellite)">
+                    <span id="mapLayerToggleIcon" style="font-size: 1.15rem; line-height: 1;">🛰️</span>
+                </button>
+                <button type="button" class="map-control-btn recenter-btn" id="recenterLocationBtn" title="Recenter on My Location">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="7"/>
+                        <polyline points="12 2 12 5"/>
+                        <polyline points="12 19 12 22"/>
+                        <polyline points="2 12 5 12"/>
+                        <polyline points="19 12 22 12"/>
+                        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    </svg>
+                </button>
+                <div class="zoom-controls-group">
+                    <button type="button" class="map-control-btn zoom-btn" id="mapZoomInBtn" title="Zoom In">+</button>
+                    <button type="button" class="map-control-btn zoom-btn" id="mapZoomOutBtn" title="Zoom Out">−</button>
+                </div>
+            </div>
+
+            <!-- Modern Destination Search Panel ("Where do you want to go?") -->
+            <div class="booking-search-panel" id="bookingSearchPanel">
+                <div class="panel-header">
+                    <div class="panel-header-top">
+                        <h2 class="panel-title">Where do you want to go?</h2>
+                        <span class="community-lock-pill" id="panelCommunityLockPill">🎓 Student Rides</span>
+                    </div>
+                </div>
+
+                <!-- Route Inputs Box with Connector Line -->
+                <div class="route-inputs-card">
+                    <div class="route-connector-line">
+                        <div class="connector-dot origin-dot"></div>
+                        <div class="connector-line"></div>
+                        <div class="connector-dot dest-dot"></div>
+                    </div>
+
+                    <div class="route-fields">
+                        <!-- Pickup Field -->
+                        <div class="route-input-group">
+                            <span class="route-field-label">Pickup Location</span>
+                            <div class="input-inner-wrap">
+                                <input type="text" id="pickupLocationInput" class="route-input" placeholder="Detecting your campus location..." autocomplete="off">
+                                <button type="button" class="input-action-btn" id="detectGpsBtn" title="Detect GPS Location">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="route-divider"></div>
+
+                        <!-- Destination Field -->
+                        <div class="route-input-group destination-group">
+                            <span class="route-field-label">Destination</span>
+                            <div class="input-inner-wrap">
+                                <input type="text" id="destinationLocationInput" class="route-input" placeholder="Enter your destination..." autocomplete="off">
+                                <button type="button" class="input-action-btn clear-dest-btn" id="clearDestBtn" title="Clear Destination" style="display: none;">
+                                    &times;
+                                </button>
+                            </div>
+
+                            <!-- Autocomplete Suggestions Dropdown -->
+                            <div id="destinationSuggestions" class="suggestions-dropdown" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Destination Chips -->
+                <div class="quick-dest-chips" id="quickDestChips">
+                    <button type="button" class="chip-btn" data-dest="Central Library, DTU Campus" data-lat="28.7505" data-lng="77.1179">🏛️ Central Library</button>
+                    <button type="button" class="chip-btn" data-dest="Samaypur Badli Metro Station" data-lat="28.7460" data-lng="77.1350">🚇 Badli Metro</button>
+                    <button type="button" class="chip-btn" data-dest="Hostel Block C & D" data-lat="28.7530" data-lng="77.1130">🏢 Hostels</button>
+                    <button type="button" class="chip-btn" data-dest="Connaught Place, New Delhi" data-lat="28.6315" data-lng="77.2167">🛍️ Connaught Place</button>
+                    <button type="button" class="chip-btn" data-dest="North Campus, Delhi University" data-lat="28.6890" data-lng="77.2100">🎓 North Campus</button>
+                </div>
+
+                <!-- Calculated Route Strip (shown once destination is set) -->
+                <div class="route-summary-strip" id="routeSummaryStrip" style="display: none;">
+                    <div class="route-metric">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span id="routeDurationText">~18 mins</span>
+                    </div>
+                    <span class="metric-separator">•</span>
+                    <div class="route-metric">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span id="routeDistanceText">7.8 km</span>
+                    </div>
+                    <span class="route-metric-badge">Direct Route</span>
+                </div>
+
+                <!-- Find a Ride Button -->
+                <button type="button" class="btn btn-find-ride" id="findRideBtn">
+                    <span>Find a Ride</span>
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+
+            <!-- Available Matching Rides Bottom Sheet / Drawer -->
+            <div class="matching-rides-sheet" id="matchingRidesSheet">
+                <div class="sheet-handle-bar" onclick="app.toggleMatchingRidesSheet()">
+                    <div class="sheet-drag-handle"></div>
+                    <div class="sheet-header-content">
+                        <div>
+                            <h3 class="sheet-title" id="sheetTitle">Available Community Rides</h3>
+                            <span class="sheet-subtitle" id="sheetSubtitle">Verified college members on this route</span>
+                        </div>
+                        <button type="button" class="sheet-close-btn" onclick="app.closeMatchingRidesSheet()" aria-label="Close Rides Sheet">&times;</button>
+                    </div>
+                </div>
+                <div class="sheet-rides-list" id="matchingRidesList">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Legacy Containers for backward compatibility with RBAC query updates -->
+            <div style="display: none;" id="studentRidesListContainer"></div>
+            <div style="display: none;" id="facultyRidesListContainer"></div>
+            <div style="display: none;" id="staffRidesListContainer"></div>
+            <div style="display: none;" id="studentMyBookingsContainer"></div>
+            <div style="display: none;" id="facultyMyBookingsContainer"></div>
+            <div style="display: none;" id="staffMyBookingsContainer"></div>
+
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- SCREEN 1: "JOIN YOUR COLLEGE COMMUNITY" (ROLE SELECTION)           -->
+        <!-- ================================================================== -->
+        <section id="joinCommunityView" class="view-section">
+            <div class="subview-top-bar">
+                <button type="button" class="subview-back-btn" onclick="app.navigateToRoleHome()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    <span>Back to Live Map</span>
+                </button>
+            </div>
+
+            <div class="join-community-screen">
+                <h1 class="screen-title">Join Your College Community</h1>
+                <p class="screen-subtitle">Choose your role to get started with College-Chalo.</p>
+
+                <!-- 3 COMMUNITY CARDS -->
+                <div class="role-cards-grid">
+                    
+                    <!-- Card 1: Student -->
+                    <div class="role-card student" data-community-role="student">
+                        <div class="role-card-icon-box">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+                        </div>
+                        <h2 class="role-card-title">Student</h2>
+                        <p class="role-card-desc">Share affordable rides with fellow students.</p>
+                        <button class="btn btn-primary role-card-btn" data-role="student">
+                            Continue as Student
+                        </button>
+                    </div>
+
+                    <!-- Card 2: Faculty -->
+                    <div class="role-card faculty" data-community-role="faculty">
+                        <div class="role-card-icon-box">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        </div>
+                        <h2 class="role-card-title">Faculty</h2>
+                        <p class="role-card-desc">Coordinate your commute with fellow faculty members.</p>
+                        <button class="btn btn-primary role-card-btn" data-role="faculty" style="background: #0284c7;">
+                            Continue as Faculty
+                        </button>
+                    </div>
+
+                    <!-- Card 3: Staff -->
+                    <div class="role-card staff" data-community-role="staff">
+                        <div class="role-card-icon-box">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/></svg>
+                        </div>
+                        <h2 class="role-card-title">College Staff</h2>
+                        <p class="role-card-desc">Share your daily commute with fellow college staff members.</p>
+                        <button class="btn btn-primary role-card-btn" data-role="staff" style="background: #d97706;">
+                            Continue as Staff
+                        </button>
+                    </div>
+
+                </div>
+
+                <div style="margin-top: 28px; display: flex; gap: 12px; justify-content: center;">
+                    <button class="btn btn-secondary btn-sm" onclick="app.showView('loginView')">
+                        Sign In Existing Account
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="app.navigateToRoleHome()">
+                        Continue as Guest on Map
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- SCREEN 2: SEPARATE REGISTRATION FLOWS (FORM VIEW)                  -->
+        <!-- ================================================================== -->
+        <section id="registrationFormView" class="view-section">
+            <div class="subview-top-bar">
+                <button type="button" class="subview-back-btn" onclick="app.showView('joinCommunityView')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    <span>Back to Roles</span>
+                </button>
+            </div>
+
+            <div class="registration-card">
+                <div class="form-header">
+                    <span class="role-badge student form-community-badge" id="regFormCommunityBadge">Student Role</span>
+                    <h2 class="screen-title" id="regFormCommunityTitle" style="font-size: 1.6rem; margin-top: 6px;">Registration</h2>
+                </div>
+
+                <form id="communityRegistrationForm">
+                    <div class="form-group">
+                        <label for="regFullName">Full Name</label>
+                        <input type="text" id="regFullName" class="form-control" placeholder="Full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regEmail" id="regEmailLabel">University Email</label>
+                        <input type="email" id="regEmail" class="form-control" placeholder="name@university.edu" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" class="form-control" placeholder="Password" minlength="6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regUniversity">University Name</label>
+                        <input type="text" id="regUniversity" class="form-control" value="Delhi Technological University" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regIdNumber" id="regFormIdLabel">College ID</label>
+                        <input type="text" id="regIdNumber" class="form-control" placeholder="ID Number" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regAvatarUrl">Profile Photo URL (Optional)</label>
+                        <input type="url" id="regAvatarUrl" class="form-control" placeholder="https://...">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="regSubmitBtn" style="margin-top: 14px;">
+                        Complete Registration
+                    </button>
+                    
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.showView('joinCommunityView')">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- SIGN IN VIEW                                                       -->
+        <!-- ================================================================== -->
+        <section id="loginView" class="view-section">
+            <div class="subview-top-bar">
+                <button type="button" class="subview-back-btn" onclick="app.navigateToRoleHome()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    <span>Back to Live Map</span>
+                </button>
+            </div>
+
+            <div class="registration-card" style="max-width: 440px;">
+                <div class="form-header">
+                    <h2 class="screen-title" style="font-size: 1.6rem;">Sign In</h2>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="name@university.edu" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginSubmitBtn">
+                        Sign In
+                    </button>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px;">Quick Demo Accounts:</span>
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('loginEmail').value='rohan.sharma@university.edu'; document.getElementById('loginPassword').value='Password123!';">Student</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('loginEmail').value='dr.arun.sharma@university.edu'; document.getElementById('loginPassword').value='Password123!';">Faculty</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('loginEmail').value='rajesh.verma@university.edu'; document.getElementById('loginPassword').value='Password123!';">Staff</button>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.showView('joinCommunityView')">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- SCREEN 6: TEST SUITE & SECURITY VALIDATOR (12/12 SCENARIOS)        -->
+        <!-- ================================================================== -->
+        <section id="testSuiteView" class="view-section">
+            <div class="subview-top-bar">
+                <button type="button" class="subview-back-btn" onclick="app.navigateToRoleHome()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    <span>Back to Live Map</span>
+                </button>
+            </div>
+
+            <div class="test-dashboard">
+                <div class="test-header">
+                    <div>
+                        <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+                            Security & Community Isolation Tests
+                        </h2>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Verifies strict separation between Student, Faculty, and Staff communities.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="testSummaryBadge" class="test-summary-pill test-badge-pass">12 / 12 Tests Passed</span>
+                        <button class="btn btn-primary btn-sm" id="runAllTestsBtn">
+                            Run Tests
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" id="simStuFacBtn" style="color: #b91c1c;">
+                        Test Student → Faculty Booking
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="simFacStuBtn" style="color: #b91c1c;">
+                        Test Faculty → Student Booking
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="simRoleTamperBtn" style="color: #b45309;">
+                        Test Role Alteration
+                    </button>
+                </div>
+
+                <!-- Test results table -->
+                <div style="overflow-x: auto;">
+                    <table class="test-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 70px;">#</th>
+                                <th>Test Scenario</th>
+                                <th style="width: 100px;">Status</th>
+                                <th>Backend Enforcement</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testResultsBody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">
+                                    Click "Run Tests" to execute validation.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ====================================================================== -->
+    <!-- MODAL: MY BOOKINGS                                                      -->
+    <!-- ====================================================================== -->
+    <div class="modal-backdrop" id="myBookingsModal">
+        <div class="modal-content" style="max-width: 580px;">
+            <button class="modal-close-btn modal-close-trigger">&times;</button>
+            <div style="margin-bottom: 18px;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #0f172a;">
+                    My Ride Bookings
+                </h3>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Your confirmed carpool rides within your college community</span>
+            </div>
+
+            <div id="modalBookingsList" style="max-height: 400px; overflow-y: auto;">
+                <!-- Injected via JS -->
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-block modal-close-trigger" style="margin-top: 14px;">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- MODAL: OFFER A RIDE (WITH CALENDAR DATE/TIME PICKER)                    -->
+    <!-- ====================================================================== -->
+    <div class="modal-backdrop" id="offerRideModal">
+        <div class="modal-content">
+            <button class="modal-close-btn modal-close-trigger">&times;</button>
+            <div style="text-align: center; margin-bottom: 18px;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #0f172a;">
+                    Offer a Ride
+                </h3>
+                <span class="role-badge student user-role-badge-display" id="offerRideRoleBadge">Student Community</span>
+            </div>
+
+            <form id="offerRideForm">
+                <!-- Transport Type Picker (Bike vs Car) -->
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; margin-bottom: 8px;">Vehicle Type (Transport)</label>
+                    <div class="transport-type-picker">
+                        <div class="transport-option active" id="transportOptionCar" onclick="app.setOfferVehicleType('car')">
+                            <input type="radio" name="offerVehicleType" id="vehicleCarRadio" value="car" checked class="sr-only">
+                            <span class="transport-icon">🚗</span>
+                            <div class="transport-text">
+                                <span class="transport-title">4-Wheeler (Car)</span>
+                                <span class="transport-desc">Choose 1 to 6 Seats</span>
+                            </div>
+                        </div>
+                        <div class="transport-option" id="transportOptionBike" onclick="app.setOfferVehicleType('bike')">
+                            <input type="radio" name="offerVehicleType" id="vehicleBikeRadio" value="bike" class="sr-only">
+                            <span class="transport-icon">🛵</span>
+                            <div class="transport-text">
+                                <span class="transport-title">2-Wheeler (Bike)</span>
+                                <span class="transport-desc">1 Passenger Seat (Fixed)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="offerOrigin">Origin</label>
+                    <input type="text" id="offerOrigin" class="form-control" placeholder="Departure location (e.g. DTU Main Gate)" required>
+                </div>
+                <div class="form-group">
+                    <label for="offerDest">Destination</label>
+                    <input type="text" id="offerDest" class="form-control" placeholder="Destination (e.g. Badli Metro Station)" required>
+                </div>
+                <div class="form-group">
+                    <label for="offerTime">Date & Time</label>
+                    <div class="calendar-input-wrap">
+                        <input type="datetime-local" id="offerTime" class="form-control" required>
+                        <button type="button" class="calendar-btn" onclick="const el=document.getElementById('offerTime'); if (el.showPicker) el.showPicker(); else el.focus();" title="Open Calendar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group" id="offerSeatsGroup">
+                        <label for="offerSeats" id="offerSeatsLabel">Seats to Offer</label>
+                        <div class="seats-input-wrap">
+                            <input type="number" id="offerSeats" class="form-control" min="1" max="6" value="3" required>
+                            <span class="seats-badge-hint" id="bikeSeatsBadge" style="display: none;">🛵 1 Seat Fixed</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerPrice">Price (₹)</label>
+                        <input type="number" id="offerPrice" class="form-control" min="0" value="40" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label for="offerCarModel" id="offerVehicleModelLabel">Vehicle Model</label>
+                        <input type="text" id="offerCarModel" class="form-control" placeholder="e.g. Honda City / Swift">
+                    </div>
+                    <div class="form-group">
+                        <label for="offerCarPlate" id="offerVehiclePlateLabel">Plate Number</label>
+                        <input type="text" id="offerCarPlate" class="form-control" placeholder="DL-08-AB-1234">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="offerNotes">Ride Notes (Optional)</label>
+                    <input type="text" id="offerNotes" class="form-control" placeholder="e.g. Leaving from library gate, AC on">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="offerRideSubmitBtn" style="margin-top: 10px;">
+                    Publish Ride
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- MODAL: BOOK RIDE                                                       -->
+    <!-- ====================================================================== -->
+    <div class="modal-backdrop" id="bookingModal">
+        <div class="modal-content">
+            <button class="modal-close-btn modal-close-trigger">&times;</button>
+            <div style="text-align: center; margin-bottom: 18px;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #0f172a;">
+                    Book Ride
+                </h3>
+                <div style="display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 6px;">
+                    <span class="role-badge student" id="bookingModalRoleBadge">Student Community Locked</span>
+                    <span class="vehicle-pill car" id="bookingModalVehicleBadge">🚗 4-Wheeler</span>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Driver:</span>
+                    <strong id="bookingModalDriver">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Vehicle:</span>
+                    <strong id="bookingModalVehicle">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Route:</span>
+                    <span style="font-weight: 600;"><span id="bookingModalOrigin">--</span> → <span id="bookingModalDest">--</span></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Time:</span>
+                    <strong id="bookingModalTime">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px solid var(--border-light);">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Price:</span>
+                    <strong id="bookingModalPrice" style="color: #0f172a; font-size: 1.1rem;">--</strong>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="bookingSeatsSelect" id="bookingSeatsSelectLabel">Seats to Book</label>
+                <select id="bookingSeatsSelect" class="form-control">
+                    <option value="1">1 Seat</option>
+                </select>
+                <span id="bikeBookingNotice" style="display: none; font-size: 0.78rem; color: #8c6b3e; margin-top: 4px; font-weight: 600;">
+                    🛵 2-Wheeler ride: Maximum 1 passenger seat can be booked.
+                </span>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block btn-lg" id="confirmBookingBtn" style="margin-top: 14px;">
+                Confirm Booking
+            </button>
+
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- MODAL: PROFILE                                                         -->
+    <!-- ====================================================================== -->
+    <div class="modal-backdrop" id="profileModal">
+        <div class="modal-content" style="max-width: 420px;">
+            <button class="modal-close-btn modal-close-trigger">&times;</button>
+            <div style="text-align: center; margin-bottom: 18px;">
+                <img src="" class="user-avatar-display" style="width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #d4c3aa; margin: 0 auto 10px auto; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <h3 class="user-name-display" style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800;">User Profile</h3>
+                <span class="role-badge student user-role-badge-display">Student</span>
+            </div>
+
+            <div style="background: var(--bg-card-alt); border-radius: var(--radius-md); padding: 14px; margin-bottom: 18px; font-size: 0.88rem;">
+                <div style="margin-bottom: 8px;">
+                    <span style="color: var(--text-muted); font-size: 0.78rem; display: block;">University</span>
+                    <strong class="user-uni-display">Delhi Technological University</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.78rem; display: block;">Status</span>
+                    <strong style="color: #047857;">Verified Member</strong>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-block modal-close-trigger">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- MOBILE BOTTOM NAVIGATION                                               -->
+    <!-- ====================================================================== -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <button type="button" class="mobile-nav-item active" id="mobileNavHome" onclick="app.navigateToRoleHome();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 16 12 12 8"/></svg>
+            <span>Map</span>
+        </button>
+        <button type="button" class="mobile-nav-item" id="mobileNavOffer" onclick="app.openOfferRideModal();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span>Offer</span>
+        </button>
+        <button type="button" class="mobile-nav-item" id="mobileNavBookings" onclick="app.openMyBookingsModal();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Bookings</span>
+        </button>
+        <button type="button" class="mobile-nav-item" id="mobileNavTests" onclick="window.app.showView('testSuiteView');">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span>Tests</span>
+        </button>
+        <button type="button" class="mobile-nav-item" id="mobileNavMenu" onclick="app.toggleMobilityDrawer();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <span>Menu</span>
+        </button>
+    </nav>
+
+    <!-- Scripts -->
+    <script src="/static/js/api.js?v=2.5"></script>
+    <script src="/static/js/test_runner.js?v=2.5"></script>
+    <script src="/static/js/app.js?v=2.5"></script>
+</body>
+</html>
